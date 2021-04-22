@@ -6,3 +6,5 @@ services:
       - './provision/php/${PHP_VER}/xdebug.ini:/etc/php7/conf.d/xdebug.ini'
     environment:
       XDEBUG_CONFIG: ${XDEBUG_CONFIG}
+    ports:
+      - '9001:9000'
