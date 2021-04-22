@@ -21,7 +21,7 @@ RUN	 apk update && \
 	nano \
 	#busybox-extras \
 	bash \
-  tini \
+    tini \
 	php7 \
 	php7-intl \
 	php7-phar \
