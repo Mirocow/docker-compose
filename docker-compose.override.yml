@@ -1,0 +1,8 @@
+version: '3.7'
+
+services:
+  php:
+    volumes:
+      - './provision/php/${PHP_VER}/xdebug.ini:/etc/php7/conf.d/xdebug.ini'
+    environment:
+      XDEBUG_CONFIG: ${XDEBUG_CONFIG}
