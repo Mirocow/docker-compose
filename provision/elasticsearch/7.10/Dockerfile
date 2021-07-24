@@ -1,4 +1,4 @@
-FROM elasticsearch:5.6.10-alpine
+FROM blacktop/elasticsearch:7.10
 
 RUN apk update && apk upgrade && rm -rf /tmp/* \
     && rm -rf /var/cache/apk/* \
