@@ -1,11 +1,17 @@
-FROM php:7.3.21-fpm-alpine
+FROM php:7.3.29-fpm-alpine
+
+ARG TIMEZONE=Europe/Moscow
+ARG PHP_MEMORY_LIMIT=512M
+ARG MAX_UPLOAD=50M
+ARG PHP_MAX_FILE_UPLOAD=200
+ARG PHP_MAX_POST=100M
 
 # Environments
-ENV TIMEZONE            Europe/Moscow
-ENV PHP_MEMORY_LIMIT    512M
-ENV MAX_UPLOAD          50M
-ENV PHP_MAX_FILE_UPLOAD 200
-ENV PHP_MAX_POST        100M
+ENV TIMEZONE=${TIMEZONE}
+ENV PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
+ENV MAX_UPLOAD=${MAX_UPLOAD}
+ENV PHP_MAX_FILE_UPLOAD=${PHP_MAX_FILE_UPLOAD}
+ENV PHP_MAX_POST=${PHP_MAX_POST}
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/main/" > /etc/apk/repositories && \
 	echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/community" >> /etc/apk/repositories 
