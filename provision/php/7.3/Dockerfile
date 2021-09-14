@@ -69,6 +69,8 @@ RUN	 apk update && \
 	php7-tokenizer \
 	php7-ftp \
 	php7-pecl-xdebug \
+	php7-dev \
+	php7-pear \
 	&& \
 	  # Set environments
 	sed -i "s|;*daemonize\s*=\s*yes|daemonize = no|g" /etc/php7/php-fpm.conf && \
@@ -101,7 +103,8 @@ RUN apk add --no-cache --allow-untrusted \
 	git \
 	libevent \
 	yaml \
-	#geoip \
+	geoip \
+	geoip-dev \
 	bash \
 	nano \
 	busybox-extras \
@@ -117,8 +120,8 @@ RUN npm install -g gulp
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer 
 
 # install and remove building packages
-ENV PHPIZE_DEPS autoconf file g++ gcc libc-dev make pkgconf re2c php7-dev php7-pear \
-	yaml-dev pcre-dev zlib-dev cyrus-sasl-dev libevent-dev openssl-dev geoip-dev
+ENV PHPIZE_DEPS autoconf file g++ gcc libc-dev make pkgconf \
+	yaml-dev pcre-dev zlib-dev cyrus-sasl-dev libevent-dev openssl-dev readline-dev
 
 ENV PHP_INI_DIR /etc/php7
 
@@ -128,15 +131,9 @@ RUN set -xe \
 	$PHPIZE_DEPS \
 	&& sed -i 's/^exec $PHP -C -n/exec $PHP -C/g' $(which pecl) \
 	&& pecl channel-update pecl.php.net \
-  && pecl install yaml \
-	event \
-	#&& pecl install yaml geoip-1.1.1 \
-	#&& echo "extension=geoip.so" >> $PHP_INI_DIR/conf.d/geoip.ini \
+	&& pecl install -f yaml event \
 	&& echo "extension=yaml.so" > $PHP_INI_DIR/conf.d/01_yaml.ini \
 	&& echo "extension=event.so" > $PHP_INI_DIR/conf.d/01_event.ini \
-	#&& wget -q https://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz -P /usr/share/GeoIP/ \
-	#&& gzip -d /usr/share/GeoIP/GeoLiteCity.dat.gz \
-	#&& mv /usr/share/GeoIP/GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat \		
 	&& rm -rf /usr/share/php7 \
 	&& rm -rf /tmp/* \
 	&& apk del .phpize-deps && \

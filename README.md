@@ -1,5 +1,11 @@
 # Docker Box
 
+## Create 
+
+```bash
+$ docker network create --driver=bridge --subnet=172.100.1.0/24 --gateway=172.100.1.1 site_loc
+```
+
 ## Xdebug setup
 
 Get active network`s interface name
