@@ -57,7 +57,6 @@ RUN	 apk update && \
 	php7-pdo_dblib \
 	php7-curl \
 	php7-ctype \
-	php7-fpm \
 	php7-redis \
 	php7-sockets \
 	php7-imagick \
