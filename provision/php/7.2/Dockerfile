@@ -35,16 +35,18 @@ RUN	 apk update && \
 	php7-pdo_odbc \
 	php7-json \
 	php7-dom \
-	php7-pdo \
 	php7-zip \
-	php7-mysqli \
-	php7-sqlite3 \
 	php7-bcmath \
 	php7-gd \
 	php7-odbc \
+	php7-mysqli \
+	#php7-mysql \
+	php7-pgsql \
+	php7-pdo \
+	php7-sqlite3 \
+	php7-pdo_pgsql \
 	php7-pdo_mysql \
 	php7-pdo_sqlite \
-	php7-pdo_pgsql \
 	php7-gettext \
 	php7-xmlreader \
 	php7-xmlrpc \

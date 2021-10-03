@@ -13,8 +13,9 @@ ENV MAX_UPLOAD=${MAX_UPLOAD}
 ENV PHP_MAX_FILE_UPLOAD=${PHP_MAX_FILE_UPLOAD}
 ENV PHP_MAX_POST=${PHP_MAX_POST}
 
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/main/" > /etc/apk/repositories && \
-	echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/main/" > /etc/apk/repositories && \
+	echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories && \
+	echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/community" >> /etc/apk/repositories
 
 # Let's roll
 RUN	 apk update && \
@@ -41,11 +42,14 @@ RUN	 apk update && \
 	php5-dom \
 	php5-pdo \
 	php5-zip \
-	php5-mysqli \
 	php5-sqlite3 \
 	php5-bcmath \
 	php5-gd \
 	php5-odbc \
+	php5-mysqli \
+	php5-mysql \
+	php5-pgsql \
+	php5-pdo_pgsql \
 	php5-pdo_mysql \
 	php5-pdo_sqlite \
 	php5-gettext \
@@ -64,7 +68,7 @@ RUN	 apk update && \
 	php5-gmp \
 	#php5-session \
 	php5-xdebug \
-	php5-zlib \
+	#php5-zlib \
 	php5-dev \
 	php5-pear \
 	&& \
@@ -86,12 +90,10 @@ RUN	 apk update && \
 	apk del tzdata && \
 	rm -rf /var/cache/apk/*
 
-RUN php -v
-RUN rm /usr/local/bin/php
-RUN rm /usr/local/bin/pecl
-#RUN mv /usr/bin/php /usr/bin/php.old		
-#RUN ln -s /usr/bin/php5 /usr/bin/php
-#RUN ln -s /usr/sbin/php-fpm7 /usr/sbin/php-fpm
+RUN rm /usr/bin/pecl
+RUN ln -s /usr/local/sbin/php-fpm /usr/sbin/php-fpm
+RUN ln -s /usr/local/bin/php /usr/bin/php
+RUN ln -s /usr/local/bin/pecl /usr/bin/pecl
 
 RUN apk add --no-cache --allow-untrusted \
 	curl \
@@ -124,9 +126,11 @@ RUN set -xe \
 	$PHPIZE_DEPS \
 	&& sed -i 's/^exec $PHP -C -n/exec $PHP -C/g' $(which pecl) \
 	&& pecl channel-update pecl.php.net \
-	&& pecl install yaml event \
+	#&& pecl install -f xdebug-2.5.5 \
+	#&& sed -i "s|zend_extension=/usr/lib/php5/modules/xdebug.so|extension=/usr/local/lib/php/extensions/no-debug-non-zts-20131226/xdebug.so|i" /etc/php5/conf.d/xdebug.ini \
+	#&& echo "extension=/usr/local/lib/php/extensions/no-debug-non-zts-20131226/xdebug.so" > /etc/php5/conf.d/01_xdebug.ini \
 	#&& echo "extension=yaml.so" > $PHP_INI_DIR/conf.d/01_yaml.ini \
-	&& echo "extension=event.so" > $PHP_INI_DIR/conf.d/01_event.ini \
+	#&& echo "extension=event.so" > $PHP_INI_DIR/conf.d/01_event.ini \
 	&& rm -rf /usr/share/php5 \
 	&& rm -rf /tmp/* \
 	&& apk del .phpize-deps && \
