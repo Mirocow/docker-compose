@@ -41,6 +41,7 @@ services:
     volumes:
       - ../:/app:rw
       - ./logs/php:/var/log/php7
+      - ./etc/supervisor/conf.d:/etc/supervisor/conf.d  
     sysctls:
       net.core.somaxconn: '1024'
     networks:

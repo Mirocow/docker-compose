@@ -1,0 +1,180 @@
+version: "3.7"
+
+services:
+
+  nginx:
+    build:
+      context: provision/nginx
+      args:
+        - NGINX_VERSION=${NGINX_VERSION}
+    shm_size: '4gb'
+    restart: unless-stopped
+    volumes:
+      - ../:/app:rw
+      - ./logs/nginx:/var/log/nginx
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - '80:80'
+    expose:
+      - '80'
+    depends_on:
+      - 'php'
+
+  php:
+    build:
+      context: provision/php/${PHP_VER}
+      dockerfile: Dockerfile
+      args:
+        TIMEZONE: '${TIMEZONE}'
+        PHP_MEMORY_LIMIT: '${PHP_MEMORY_LIMIT}'
+        MAX_UPLOAD: '${MAX_UPLOAD}'
+        PHP_MAX_FILE_UPLOAD: '${PHP_MAX_FILE_UPLOAD}'
+        PHP_MAX_POST: '${PHP_MAX_POST}'
+    shm_size: '4gb'
+    restart: unless-stopped
+    expose:
+      - '9000'
+      - '9001'
+    depends_on:
+      - 'mysql'
+    environment:
+      TZ: 'Europe/Moscow'
+      PHP_IDE_CONFIG: 'serverName=${LOCAL_HOST}'
+    volumes:
+      - ../:/app:rw
+      - ./logs/php:/var/log/php7
+    sysctls:
+      net.core.somaxconn: '1024'
+
+  mysql:
+    build: provision/mariadb
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    environment:
+      TZ: 'Europe/Moscow'
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - '3309:3306'
+    volumes:
+      - ./var/mysql:/var/lib/mysql
+      - ./var/dump:/usr/src/dump
+      - './bin:/app'
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - mysql
+    ports:
+      - '800:80'
+    networks:
+      lpt: null
+    environment:
+      PMA_HOST: mysql
+
+  elasticsearch:
+    build: provision/elasticsearch/${ELASTIC_VER}
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - ../:/app:rw
+      - ./var/elastic:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: -Xms2g -Xmx2g
+
+  kibana:
+    build: provision/kibana/${KIBANA_VER}
+    depends_on:
+      - 'elasticsearch'
+    ports:
+      - '5601:5601'
+    volumes:
+      - ../:/app:rw
+
+  wsock:
+    build: provision/wsock
+    depends_on:
+      - redis
+    links:
+      - redis
+    ports:
+      - '5000:5000'
+    networks:
+      lpt:
+        aliases:
+          - wsock
+
+  redis:
+    build: provision/redis
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./var/redis:/var/lib/redis
+      - ./var/dump:/usr/src/dump
+      - ./bin:/app
+
+  postgres:
+    build: provision/postgres
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./var/postgres:/var/lib/postgres
+      - ./var/dump:/usr/src/dump
+      - ./bin:/app
+
+  rabbit:
+    build: provision/rabbit
+    environment:
+      TZ: 'Europe/Moscow'
+    logging:
+      options:
+        max-size: 1m
+    networks:
+      lpt:
+        aliases:
+          - rabbit
+    ports:
+      - '15672:15672'
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - '2181:2181'
+  kafka:
+    build: provision/kafka
+    ports:
+      - target: 9094
+        published: 9094
+        protocol: tcp
+        mode: host
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    volumes:
+      - ./var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+  delelop_net:
+    name: ${NETWORK_NAME}
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NET_CONFIG_SUBNET}
