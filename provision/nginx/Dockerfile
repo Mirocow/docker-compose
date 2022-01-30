@@ -55,6 +55,7 @@ RUN cp /usr/local/nginx/modules/ngx_http_push_stream_module.so /usr/lib/nginx/mo
 
 ADD etc/nginx.conf /etc/nginx/nginx.conf
 ADD etc/fastcgi_params /etc/nginx/fastcgi_params
+ADD etc/proxy_params /etc/nginx/proxy_params
 
 ADD supervisord.conf /etc/supervisor/supervisord.conf
 ADD entrypoint.sh /entrypoint.sh

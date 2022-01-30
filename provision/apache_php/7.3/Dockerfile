@@ -2,7 +2,7 @@ FROM ubuntu:bionic
 MAINTAINER romeOz <serggalka@gmail.com>
 
 ENV OS_LOCALE="en_US.UTF-8"
-RUN apt-get update --fix-missing && apt-get install -y locales && locale-gen ${OS_LOCALE}
+RUN apt-get update && apt-get install -y locales && locale-gen ${OS_LOCALE}
 ENV LANG=${OS_LOCALE} \
 	LANGUAGE=${OS_LOCALE} \
 	LC_ALL=${OS_LOCALE} \
@@ -45,11 +45,14 @@ RUN	\
 	php7.3-imap \
 	php7.3-msgpack \
 	php7.3-memcached \
+	php7.3-soap \
 	php7.3-xdebug \
 	php-pear \
+	lsof \
 	# Apache settings
 	&& cp /dev/null ${APACHE_CONF_DIR}/conf-available/other-vhosts-access-log.conf \
 	&& rm ${APACHE_CONF_DIR}/sites-enabled/000-default.conf ${APACHE_CONF_DIR}/sites-available/000-default.conf \
+	&& rm /etc/php/7.3/cli/conf.d/20-xdebug.ini /etc/php/7.3/apache2/conf.d/20-xdebug.ini \
 	&& a2enmod rewrite php7.3 \
 	# Install composer
 	&& curl -sS https://getcomposer.org/installer | php -- --version=1.8.4 --install-dir=/usr/local/bin --filename=composer \
@@ -64,6 +67,8 @@ RUN	\
 	&& chown www-data:www-data ${PHP_DATA_DIR} -Rf
 
 COPY ./configs/apache2.conf ${APACHE_CONF_DIR}/apache2.conf
+COPY ./configs/app.conf ${APACHE_CONF_DIR}/app.conf
+COPY ./configs/ports.conf ${APACHE_CONF_DIR}/ports.conf
 COPY ./configs/php.ini  ${PHP_CONF_DIR}/apache2/conf.d/custom.ini
 
 WORKDIR /var/www/app/

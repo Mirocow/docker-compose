@@ -2,7 +2,7 @@ FROM ubuntu:bionic
 MAINTAINER romeOz <serggalka@gmail.com>
 
 ENV OS_LOCALE="en_US.UTF-8"
-RUN apt-get update --fix-missing --fix-missing && apt-get install -y locales && locale-gen ${OS_LOCALE}
+RUN apt-get update && apt-get install -y locales && locale-gen ${OS_LOCALE}
 ENV LANG=${OS_LOCALE} \
     LANGUAGE=${OS_LOCALE} \
     LC_ALL=${OS_LOCALE} \
@@ -23,7 +23,21 @@ RUN	\
 	&& add-apt-repository -y ppa:ondrej/apache2 \
 	&& apt-get update --fix-missing \
 	&& apt-cache policy php-xdebug \
-	&& apt-get install -y curl apache2 libapache2-mod-php7.2 php7.2-cli php7.2-readline php7.2-mbstring php7.2-zip php7.2-intl php7.2-xml php7.2-json php7.2-curl php7.2-gd php7.2-pgsql php7.2-mysql php-xdebug php-pear \
+	&& apt-get install -y curl \
+	apache2 \
+	libapache2-mod-php7.2 \
+	php7.2-cli \
+	php7.2-readline \
+	php7.2-mbstring \
+	php7.2-zip \
+	php7.2-intl \
+	php7.2-xml \
+	php7.2-json \
+	php7.2-curl \
+	php7.2-gd php7.2-pgsql \
+	php7.2-mysql \
+	php7.2-soap \
+	php-xdebug php-pear \
 	# Apache settings
 	&& cp /dev/null ${APACHE_CONF_DIR}/conf-available/other-vhosts-access-log.conf \
 	&& rm ${APACHE_CONF_DIR}/sites-enabled/000-default.conf ${APACHE_CONF_DIR}/sites-available/000-default.conf \
@@ -41,7 +55,8 @@ RUN	\
 	&& chown www-data:www-data ${PHP_DATA_DIR} -Rf
 
 COPY ./configs/apache2.conf ${APACHE_CONF_DIR}/apache2.conf
-COPY ./configs/app.conf ${APACHE_CONF_DIR}/sites-enabled/app.conf
+COPY ./configs/app.conf ${APACHE_CONF_DIR}/app.conf
+COPY ./configs/ports.conf ${APACHE_CONF_DIR}/ports.conf
 COPY ./configs/php.ini  ${PHP_CONF_DIR}/apache2/conf.d/custom.ini
 
 WORKDIR /var/www/app/

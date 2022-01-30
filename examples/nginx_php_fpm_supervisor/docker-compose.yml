@@ -1,0 +1,66 @@
+version: "3.7"
+
+services:
+
+  nginx:
+    build:
+      context: provision/nginx
+      args:
+        - NGINX_VERSION=${NGINX_VERSION}
+    shm_size: '4gb'
+    restart: unless-stopped
+    volumes:
+      - ../:/app:rw
+      - ./logs/nginx:/var/log/nginx
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - '80:80'
+    expose:
+      - '80'
+    depends_on:
+      - 'php'
+
+  php:
+    build: provision/php/${PHP_VER}
+    shm_size: '4gb'
+    restart: unless-stopped
+    expose:
+      - '9000'
+      - '9001'
+    depends_on:
+      - 'mysql'
+      - 'elasticsearch'
+    environment:
+      TZ: 'Europe/Moscow'
+      PHP_IDE_CONFIG: 'serverName=${LOCAL_HOST}'
+    volumes:
+      - ../:/app:rw
+      - ./logs/php:/var/log/php7
+      - ./etc/supervisor/conf.d:/etc/supervisor/conf.d  
+    sysctls:
+      net.core.somaxconn: '1024'
+
+  mysql:
+    build: provision/mariadb
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    environment:
+      TZ: 'Europe/Moscow'
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - '3309:3306'
+    volumes:
+      - ./var/mysql:/var/lib/mysql
+      - ./var/dump:/usr/src/dump
+      - './bin:/app'
+
+volumes:
+  mysql:
+    driver: "local"
+  esdata1:
+    driver: local

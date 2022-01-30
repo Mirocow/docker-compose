@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  backend:
+    volumes:
+      - './provision/apache_php/${PHP_VER}/configs/xdebug.ini:/etc/php/${PHP_VER}/cli/conf.d/20-xdebug.ini'
+      - './provision/apache_php/${PHP_VER}/configs/xdebug.ini:/etc/php/${PHP_VER}/apache2/conf.d/20-xdebug.ini'
+    environment:
+      PHP_IDE_CONFIG: ${PHP_IDE_CONFIG}
+      XDEBUG_CONFIG: ${XDEBUG_CONFIG}
+    ports:
+      - 9001:9000
+      #- '${SERVER_IP:-127.0.0.10}:9001:9000'
