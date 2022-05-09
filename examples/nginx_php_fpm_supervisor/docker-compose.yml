@@ -22,7 +22,7 @@ services:
     depends_on:
       - 'php'
     extra_hosts:
-      - "docker.loc:host-gateway"
+      - "yii2.loc:host-gateway"
 
   php:
     build: provision/php/${PHP_VER}
@@ -33,16 +33,18 @@ services:
       - '9001'
     depends_on:
       - 'mysql'
+      - 'elasticsearch'
     environment:
       TZ: 'Europe/Moscow'
       PHP_IDE_CONFIG: 'serverName=${LOCAL_HOST}'
     volumes:
       - ../:/app:rw
       - ./logs/php:/var/log/php7
+      - ./etc/supervisor/conf.d:/etc/supervisor/conf.d  
     sysctls:
       net.core.somaxconn: '1024'
     extra_hosts:
-      - "my.tassfx.loc:host-gateway"
+      - "yii2.loc:host-gateway"
 
   mysql:
     build: provision/mariadb
@@ -57,20 +59,12 @@ services:
     ports:
       - '3309:3306'
     volumes:
+      - ./var/mysql:/var/lib/mysql
+      - ./var/dump:/usr/src/dump
       - './bin:/app'
 
 volumes:
   mysql:
     driver: "local"
-
-networks:
-  internal:
-    driver: bridge
-    ipam:
-      driver: default
-  delelop_net:
-    name: ${NETWORK_NAME}
-    ipam:
-      driver: default
-      config:
-        - subnet: ${NET_CONFIG_SUBNET}
+  esdata1:
+    driver: local

@@ -1,0 +1,129 @@
+version: "3.7"
+
+services:
+
+  backend:
+    build:
+      context: provision/apache_php/${PHP_VER}
+    shm_size: '4gb'
+    restart: unless-stopped
+    volumes:
+      # Re-use local composer cache via host-volume
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      - ../:/app:rw
+      - ./logs/apache2:/var/log/apache2
+      - ./etc/apache2/sites-enabled:/etc/apache2/sites-enabled
+    environment:
+      TZ: 'Europe/Moscow'
+    expose:
+      - '8080'
+      - '6379'
+    depends_on:
+      - 'mysql'
+      - 'redis'
+
+  nginx:
+    build:
+      context: provision/nginx
+      args:
+        - NGINX_VERSION=${NGINX_VERSION}
+    shm_size: '4gb'
+    restart: unless-stopped
+    volumes:
+      # Re-use local composer cache via host-volume
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      # Mount source-code for development
+      - ../:/app:rw
+      - ./logs/nginx:/var/log/nginx
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - 80:80
+      #- '${SERVER_IP:-127.0.0.10}:82:80'
+    depends_on:
+      - 'backend'
+    extra_hosts:
+      - "yii2.loc:host-gateway"
+   
+  mysql:
+    build: provision/mariadb
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    environment:
+      TZ: 'Europe/Moscow'
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: my
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    expose:
+      - '3306'
+    ports:
+      - 3306:3306 
+      #- '${SERVER_IP:-127.0.0.10}:3306:3306'
+    volumes:
+      # Mount source-code for development
+      - './bin:/app'
+      - './var/mysql:/var/lib/mysql'
+      - './var/dump:/usr/src/dump'
+
+  redis:
+    build: provision/redis
+    environment:
+      TZ: 'Europe/Moscow'
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./var/redis:/var/lib/redis
+      - ./var/dump:/usr/src/dump
+      - ./bin:/app
+
+  npm:
+    image: node:13.7
+    container_name: npm
+    volumes:
+      - ../:/app:rw
+    ports:
+      - 3000:3000
+      - 3001:3001
+    working_dir: /app/crm
+    entrypoint: ['npm']
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+
+  php74:
+    build: provision/php/7.4
+    shm_size: '4gb'
+    restart: unless-stopped
+    expose:
+      - '9000'
+      - '9001'
+    environment:
+      TZ: 'Europe/Moscow'
+      PHP_IDE_CONFIG: 'serverName=${LOCAL_HOST}'
+    volumes:
+      - ../:/app:rw
+      - ./logs/php:/var/log/php7
+    sysctls:
+      net.core.somaxconn: '1024'
+    depends_on:
+      - 'mysql'
+      - 'redis'
+
+volumes:
+  mysql:
+    driver: "local"
+  backend:
+    driver: "local"
+  redis:
+    driver: "local"
+  npm:
+    driver: "local"
+
+networks:
+  overlay:

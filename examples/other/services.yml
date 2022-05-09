@@ -121,6 +121,24 @@ services:
       - ./var/dump:/usr/src/dump
       - ./bin:/app
 
+  npm:
+    image: node:13.7
+    container_name: npm
+    volumes:
+      - ../:/app:rw
+    ports:
+      - 3000:3000
+      - 3001:3001
+    working_dir: /app/crm
+    entrypoint: ['npm']
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
+
   postgres:
     build: provision/postgres
     environment:
@@ -150,6 +168,7 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - '2181:2181'
+
   kafka:
     build: provision/kafka
     ports:
@@ -166,15 +185,3 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
     volumes:
       - ./var/run/docker.sock:/var/run/docker.sock
-
-networks:
-  internal:
-    driver: bridge
-    ipam:
-      driver: default
-  delelop_net:
-    name: ${NETWORK_NAME}
-    ipam:
-      driver: default
-      config:
-        - subnet: ${NET_CONFIG_SUBNET}
